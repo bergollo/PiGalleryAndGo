@@ -68,7 +68,7 @@ export default class PhotoGallery extends Component<{}, PhotoGalleryState> {
 
     // to handle file uploads
     async getAllFiles() {
-        const response = await fetch("/api/files-upload/", {
+        const response = await fetch("/api/images/", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -89,7 +89,7 @@ export default class PhotoGallery extends Component<{}, PhotoGalleryState> {
             //         imagesData.push(result)
             //     })
             // })
-            imagesData.push('/api/uploads/' + filename)
+            imagesData.push('/api/images/' + filename)
         } 
         this.context?.setPhoto(imagesData)
       }).catch(() => {

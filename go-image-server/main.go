@@ -27,7 +27,8 @@ func main() {
 	// Route definitions
 	mux.HandleFunc("/images", listImagesHandler)
 	mux.HandleFunc("/images/", getImageHandler)
-	mux.HandleFunc("/images/upload", uploadImageHandler)
+	mux.HandleFunc("/upload", uploadImagesHandler)
+	mux.HandleFunc("/remove/", deleteImageHandler)
 
 	mux.HandleFunc("/feh/start", startHandler)
 	mux.HandleFunc("/feh/stop/", stopHandler)

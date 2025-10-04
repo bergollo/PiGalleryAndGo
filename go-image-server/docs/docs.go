@@ -29,10 +29,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -107,7 +104,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/remove/{filename}": {
             "delete": {
                 "description": "Deletes an image file from the static directory by its filename.",
                 "tags": [
@@ -213,32 +212,32 @@ const docTemplate = `{
         },
         "/upload": {
             "post": {
-                "description": "Upload an image file via multipart form data.",
+                "description": "Upload one or more image files via multipart form data.",
                 "consumes": [
                     "multipart/form-data"
                 ],
                 "tags": [
-                    "upload"
+                    "images"
                 ],
-                "summary": "Upload image",
+                "summary": "Upload multiple images",
                 "parameters": [
                     {
                         "type": "file",
-                        "description": "Image file",
-                        "name": "file",
+                        "description": "Image files",
+                        "name": "files",
                         "in": "formData",
                         "required": true
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "File uploaded successfully",
+                        "description": "Files uploaded successfully",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
-                        "description": "Missing file",
+                        "description": "Missing files",
                         "schema": {
                             "type": "string"
                         }

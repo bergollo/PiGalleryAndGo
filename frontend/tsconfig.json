@@ -37,8 +37,8 @@
     "build/types/**/*.ts",
     "builds/types/**/*.ts",
     "./build/types/**/*.ts"
-  ],
+, "vitest.config.mts"  ],
   "exclude": [
-    "node_modules",".next", "dist", "vitest.config.ts"
+    "node_modules",".next", "dist", "vitest.config.mts"
   ]
 }

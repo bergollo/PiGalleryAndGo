@@ -32,7 +32,7 @@ export class GalleryPanel extends React.Component {
 
     // to handle file uploads
     async getAllFiles() {
-        const response = await fetch("/api/files-upload/", {
+        const response = await fetch("/api/images/", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

@@ -39,14 +39,14 @@ class PhotosProvider extends Component<{ children: ReactNode }, { photos: string
     this.setState((prevState) => ({
       photos: prevState.photos.filter((photo) => photo !== url)
     }));
-    const response = await fetch(`/api/images/${path.basename(url)}`, {
+    const response = await fetch(`/api/remove/${path.basename(url)}`, {
       method: "DELETE",
       headers: {"Content-Type": "application/json",},
     });
   };
 
   updatePhotos = async () => {
-    const response = await fetch("/api/files-upload/", {
+    const response = await fetch("/api/images/", {
       method: "GET",
       headers: {
           "Content-Type": "application/json",

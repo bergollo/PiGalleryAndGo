@@ -108,8 +108,9 @@ export default forwardRef<DropZoneRef, DropZoneProp>(function DropZone({ showBut
       formData.append("files", file);
     }
     // Upload the files as a POST request to the server using fetch
-    const response = await fetch("/api/files-upload/", {
+    const response = await fetch("/api/upload/", {
       method: "POST",
+
       body: formData
     });
 

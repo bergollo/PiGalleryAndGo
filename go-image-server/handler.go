@@ -18,12 +18,16 @@ import (
 	"github.com/disintegration/imaging"
 )
 
+type payload struct {
+	Filenames []string `json:"filenames"`
+}
+
 // listImagesHandler godoc
 // @Summary List all images
 // @Description Get all image filenames from the static directory.
 // @Tags images
 // @Produce json
-// @Success 200 {array} string
+// @Success 200 {object} string
 // @Failure 500 {string} string "Unable to read directory"
 // @Router /images [get]
 func listImagesHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,8 +47,16 @@ func listImagesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	response := payload{
+		Filenames: images,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(images)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 // getImageHandler godoc
@@ -112,43 +124,59 @@ func getImageHandler(w http.ResponseWriter, r *http.Request) {
 	imaging.Encode(w, img, imaging.PNG)
 }
 
-// uploadImageHandler godoc
-// @Summary Upload image
-// @Description Upload an image file via multipart form data.
-// @Tags upload
+// uploadImagesHandler godoc
+// @Summary Upload multiple images
+// @Description Upload one or more image files via multipart form data.
+// @Tags images
 // @Accept multipart/form-data
-// @Param file formData file true "Image file"
-// @Success 201 {string} string "File uploaded successfully"
-// @Failure 400 {string} string "Missing file"
+// @Param files formData file true "Image files" multiple
+// @Success 201 {string} string "Files uploaded successfully"
+// @Failure 400 {string} string "Missing files"
 // @Failure 405 {string} string "Invalid request method"
 // @Router /upload [post]
-func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
+func uploadImagesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "Missing file", http.StatusBadRequest)
+	// Parse multipart form with a reasonable memory limit
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB
+		http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
 
-	dst, err := os.Create(filepath.Join(staticDir, header.Filename))
-	if err != nil {
-		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+	files := r.MultipartForm.File["files"]
+	if len(files) == 0 {
+		http.Error(w, "Missing files", http.StatusBadRequest)
 		return
 	}
-	defer dst.Close()
 
-	if _, err := io.Copy(dst, file); err != nil {
-		http.Error(w, "Failed to save file", http.StatusInternalServerError)
-		return
+	for _, fileHeader := range files {
+		file, err := fileHeader.Open()
+		if err != nil {
+			http.Error(w, "Failed to open file: "+fileHeader.Filename, http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		dstPath := filepath.Join(staticDir, fileHeader.Filename)
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			http.Error(w, "Unable to save file: "+fileHeader.Filename, http.StatusInternalServerError)
+			return
+		}
+
+		if _, err := io.Copy(dst, file); err != nil {
+			dst.Close()
+			http.Error(w, "Failed to save file: "+fileHeader.Filename, http.StatusInternalServerError)
+			return
+		}
+		dst.Close()
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("File uploaded successfully"))
+	w.Write([]byte("Files uploaded successfully"))
 }
 
 // deleteImageHandler godoc
@@ -160,9 +188,9 @@ func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "File name required"
 // @Failure 404 {string} string "Image not found"
 // @Failure 500 {string} string "Failed to delete file"
-// @Router /images/{filename} [delete]
+// @Router /remove/{filename} [delete]
 func deleteImageHandler(w http.ResponseWriter, r *http.Request) {
-	filename := strings.TrimPrefix(r.URL.Path, "/images/")
+	filename := strings.TrimPrefix(r.URL.Path, "/remove/")
 	if filename == "" {
 		http.Error(w, "File name required", http.StatusBadRequest)
 		return
