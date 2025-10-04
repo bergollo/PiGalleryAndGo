@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./go-image-server
+    container_name: go_image_server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./go-image-server/static:/app/static
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    restart: unless-stopped

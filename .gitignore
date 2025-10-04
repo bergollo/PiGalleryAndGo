@@ -1,0 +1,8 @@
+node_modules
+**/node_modules
+
+.next
+frontend/.next 
+frontend/build
+frontend/dist
+go-image-server/static/test.png

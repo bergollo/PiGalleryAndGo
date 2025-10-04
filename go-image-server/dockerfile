@@ -1,0 +1,21 @@
+# Dockerfile for Go Image Server
+
+# ---------- Build stage ----------
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go mod tidy && go build -o server .
+
+# ---------- Runtime stage ----------
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
+COPY --from=builder /app/server .
+COPY --from=builder /app/static ./static
+
+RUN adduser -D appuser
+USER appuser
+
+EXPOSE 8080
+CMD ["./server"]
