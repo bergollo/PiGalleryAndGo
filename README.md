@@ -21,16 +21,17 @@ Fully containerized with Docker, orchestrated via Compose, and CI/CD-ready using
 PiGalleryAndGo/
 ├── go-image-server/         # Go backend API
 │   ├── main.go
-│   ├── handlers.go
-│   ├── handlers_test.go
-│   ├── Dockerfile
-│   └── static/              # Uploaded and served images
+│   ├── handler.go
+│   ├── handler-feh.go       # Optional display control endpoints
+│   ├── docs/                # Swagger specs
+│   ├── static/              # Uploaded and served images
+│   └── Dockerfile
 │
-├── frontend/             # React frontend (Next.js)
-│   ├── src/
-│   │   └── App.jsx
+├── frontend/                # Next.js frontend
+│   ├── app/                 # App Router entrypoints (page.tsx, layout.tsx)
+│   ├── components/          # Shared UI building blocks
+│   ├── tests/               # Vitest + Playwright suites
 │   ├── public/
-│   │   └── index.html
 │   ├── package.json
 │   └── Dockerfile
 │
@@ -56,8 +57,8 @@ PiGalleryAndGo/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/yourname/monorepo.git
-cd monorepo
+git clone https://github.com/bergollo/PiGalleryAndGo.git
+cd PiGalleryAndGo
 ```
 ---
 
@@ -84,6 +85,8 @@ docker compose down
 #### Persist Uploaded Files
 
 Uploaded images are stored in `go-image-server/static/` — mapped as a volume in Compose for persistence.
+
+> **Heads-up:** The service Dockerfiles are currently named `dockerfile` (lowercase). On case-sensitive filesystems rename them to `Dockerfile` or reference the lowercase name explicitly via `dockerfile: dockerfile` in `docker-compose.yml`.
 
 ---
 
@@ -121,10 +124,25 @@ npm run dev
 Then open:
 
 ```
-http://localhost:5173
+http://localhost:3000
 ```
 
 Make sure the backend (`go-image-server`) is also running on port `8080`.
+
+> Want a different port? Pass `--port` to Next.js: `npm run dev -- --port 5173`
+
+---
+
+## Frontend & End-to-End Tests
+
+The frontend ships with Vitest and Playwright:
+
+```bash
+npm run test          # Unit tests (Vitest)
+npm run test:coverage # Coverage report
+npm run test:ui       # Launch the Vitest UI
+npx playwright test   # E2E tests (Playwright)
+```
 
 ---
 
@@ -142,13 +160,25 @@ It performs:
 2. React frontend build and test
 <!-- 3. Docker image build and push -->
 
+---
+
+## Additional Backend Endpoints
+
+The Go service also exposes image-display helpers for devices running `feh`:
+
+- `POST /feh/start` – launch the slideshow
+- `POST /feh/stop/{pid}` – stop a running slideshow by PID
+- `POST /feh/restart` – restart the slideshow process
+
+See `go-image-server/handler-feh.go` for implementation details and required environment.
+
 ### Triggered On
 
 * Every push or pull request to `dev`
 
 ---
 
-## 🪪 License
+## License
 
 This project is released under the **MIT License**.
 Feel free to use, modify, and distribute.
